@@ -17,21 +17,17 @@ if st.button("Get Stock Data"):
 
     data = yf.download(ticker, period="1y")
 
-    st.write("Data shape:", data.shape)
-    st.write("Data columns:", data.columns)
-    st.write(data.tail())
-
     if data.empty:
-        st.error("Yahoo Finance returned no data.")
+        st.error(
+            "Yahoo Finance did not return any data. "
+            "Please try again or check the ticker symbol."
+        )
         st.stop()
 
     close_data = data[["Close"]]
 
-    st.write("Close shape:", close_data.shape)
-    st.write(close_data.tail())
-
     if close_data.empty:
-        st.error("Close data is empty.")
+        st.error("No Close price data was returned.")
         st.stop()
 
     scaled_stock = scale.transform(close_data)
