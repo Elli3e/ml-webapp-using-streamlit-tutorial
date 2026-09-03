@@ -24,11 +24,11 @@ def stock_prediction ():
 
     session = requests.Session(impersonate="chrome")
     try:
-        data = yf.download( "BABA", start=start_date,end=end_date,auto_adjust=True,session=session,progress=False)
+        data = yf.download( "BABA", period="3mo", auto_adjust=True, progress=False, session=session)
 
         st.write("Yahoo download completed")
         st.write("Data shape:", data.shape)
-        st.write("Data columns:", data.columns)
+        # st.write("Data columns:", data.columns)
         st.write("Data:", data)
         if data.empty:
             st.error("Yahoo Finance returned no data for this date range.")
