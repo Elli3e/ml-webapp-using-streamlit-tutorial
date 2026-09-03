@@ -23,13 +23,28 @@ def stock_prediction ():
     end_date = selected_date + timedelta(days=1)       
 
     session = requests.Session(impersonate="chrome")
-    data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True,  session=session)
+    try:
+        data = yf.download( "BABA", start=start_date,end=end_date,auto_adjust=True,session=session,progress=False)
 
-    st.write("Downloaded data:")
-    st.write(data)
-    if data.empty:
-        st.error("Yahoo Finance returned no data for this date range.")
+        st.write("Yahoo download completed")
+        st.write("Data shape:", data.shape)
+        st.write("Data columns:", data.columns)
+        st.write("Data:", data)
+        if data.empty:
+            st.error("Yahoo Finance returned no data for this date range.")
+            return None
+        
+    except Exception as e:
+        st.error(f"Yahoo Finance error: {e}")
         return None
+    
+    # data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True,  session=session)
+    # st.write("Downloaded data:")
+    # st.write(data)
+    # if data.empty:
+    #     st.error("Yahoo Finance returned no data for this date range.")
+    #     return None
+    
     close = data[["Close"]]
     st.write("Close data:")
     st.write(close)
