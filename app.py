@@ -24,6 +24,25 @@ def stock_prediction ():
 
     session = requests.Session(impersonate="chrome")
     try:
+        test = session.get(
+        "https://query1.finance.yahoo.com/v8/finance/chart/BABA",
+        params={
+            "period1": 1780000000,
+            "period2": 1788500000,
+            "interval": "1d"
+            }
+         )
+
+        st.write("Yahoo HTTP status:", test.status_code)
+        st.write("Yahoo response length:", len(test.text))
+        st.write("Yahoo response:", test.text[:500])
+
+    except Exception as e:
+        st.error(f"Direct Yahoo connection error: {e}")
+        return None
+
+
+    try:
         data = yf.download( "BABA", period="3mo", auto_adjust=True, progress=False, session=session)
 
         st.write("Yahoo download completed")
