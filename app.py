@@ -13,14 +13,29 @@ model = load_model("lstm_model.keras")
 scale= load(open("scale_min_max.sav", "rb"))
 
 
-
 def stock_prediction ():
 
     selected_date = st.date_input("Select a date:")
     start_date = selected_date - timedelta(days=90)
     end_date = selected_date + timedelta(days=1)        
-
     data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True)
+
+    st.write("Downloaded data:")
+    st.write(data)
+    if data.empty:
+        st.error("Yahoo Finance returned no data for this date range.")
+        return None
+    close = data[["Close"]]
+    st.write("Close data:")
+    st.write(close)
+
+    if len(close) < 60:
+        st.error(
+            f"Only {len(close)} trading days were downloaded. "
+            "At least 60 are required."
+        )
+        return None
+
     close = data[["Close"]]
 
     scaled_data = scale.transform(close)
@@ -34,5 +49,7 @@ def stock_prediction ():
     return prediction_original
 
 prediction = stock_prediction()
+if prediction is not None:
+    predicted_price = float(prediction[0][0])
 
-st.success(f"Predicted price for the next closing day: ${prediction[0][0]:.2f}")
+st.success(f"Predicted price for the next closing day: ${predicted_price:.2f}")
