@@ -9,8 +9,8 @@ from tensorflow.keras.models import load_model
 
 st.title("Stock Prediction App")
 
-model = load_model("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-streamlit-tutorial/lstm_model.keras")
-scale= load(open("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-streamlit-tutorial/scale_min_max.sav", "rb"))
+model = load_model("lstm_model.keras")
+scale= load(open("scale_min_max.sav", "rb"))
 
 
 
