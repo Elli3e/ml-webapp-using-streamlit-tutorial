@@ -5,20 +5,25 @@ import tensorflow as tf
 import yfinance as yf
 from datetime import datetime, timedelta
 from tensorflow.keras.models import load_model
+import pickle
+from curl_cffi import requests
 
 
 st.title("Stock Prediction App")
 
 model = load_model("lstm_model.keras")
-scale= load(open("scale_min_max.sav", "rb"))
+with open("scale_min_max.sav", "rb") as file:
+    scale = pickle.load(file)
 
 
 def stock_prediction ():
 
     selected_date = st.date_input("Select a date:")
     start_date = selected_date - timedelta(days=90)
-    end_date = selected_date + timedelta(days=1)        
-    data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True)
+    end_date = selected_date + timedelta(days=1)       
+
+    session = requests.Session(impersonate="chrome")
+    data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True,  session=session)
 
     st.write("Downloaded data:")
     st.write(data)
@@ -52,4 +57,4 @@ prediction = stock_prediction()
 if prediction is not None:
     predicted_price = float(prediction[0][0])
 
-st.success(f"Predicted price for the next closing day: ${predicted_price:.2f}")
+    st.success(f"Predicted price for the next closing day: ${predicted_price:.2f}")
