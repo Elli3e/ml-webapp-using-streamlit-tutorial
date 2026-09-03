@@ -6,7 +6,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from tensorflow.keras.models import load_model
 import pickle
-from curl_cffi import requests
+
 
 
 st.title("Stock Prediction App")
@@ -15,55 +15,27 @@ model = load_model("lstm_model.keras")
 with open("scale_min_max.sav", "rb") as file:
     scale = pickle.load(file)
 
-
 def stock_prediction ():
 
     selected_date = st.date_input("Select a date:")
     start_date = selected_date - timedelta(days=90)
     end_date = selected_date + timedelta(days=1)       
 
-    session = requests.Session(impersonate="chrome")
-    try:
-        test = session.get(
-        "https://query1.finance.yahoo.com/v8/finance/chart/BABA",
-        params={
-            "period1": 1780000000,
-            "period2": 1788500000,
-            "interval": "1d"
-            }
-         )
+    data = yf.download(
+    "BABA",
+    start=start_date,
+    end=end_date,
+    auto_adjust=True,
+    progress=False
+)
+   
+    st.write("Downloaded data:")
+    st.write(data)
 
-        st.write("Yahoo HTTP status:", test.status_code)
-        st.write("Yahoo response length:", len(test.text))
-        st.write("Yahoo response:", test.text[:500])
-
-    except Exception as e:
-        st.error(f"Direct Yahoo connection error: {e}")
+    if data.empty:
+        st.error("Yahoo Finance returned no data for this date range.")
         return None
-
-
-    try:
-        data = yf.download( "BABA", period="3mo", auto_adjust=True, progress=False, session=session)
-
-        st.write("Yahoo download completed")
-        st.write("Data shape:", data.shape)
-        # st.write("Data columns:", data.columns)
-        st.write("Data:", data)
-        if data.empty:
-            st.error("Yahoo Finance returned no data for this date range.")
-            return None
         
-    except Exception as e:
-        st.error(f"Yahoo Finance error: {e}")
-        return None
-    
-    # data = yf.download("BABA", start=start_date, end=end_date, auto_adjust=True,  session=session)
-    # st.write("Downloaded data:")
-    # st.write(data)
-    # if data.empty:
-    #     st.error("Yahoo Finance returned no data for this date range.")
-    #     return None
-    
     close = data[["Close"]]
     st.write("Close data:")
     st.write(close)
@@ -75,14 +47,12 @@ def stock_prediction ():
         )
         return None
 
-    close = data[["Close"]]
-
     scaled_data = scale.transform(close)
     scaled_data_LSTM_input =scaled_data[-60: ] 
     scaled_data_LSTM_input=np.array(scaled_data_LSTM_input)
     reshaped_LSTM = scaled_data_LSTM_input.reshape(1, 60, 1)
 
-    prediction = model.predict(reshaped_LSTM)
+    prediction = model.predict(reshaped_LSTM, verbose=0)
     prediction_original = scale.inverse_transform(prediction)
 
     return prediction_original
