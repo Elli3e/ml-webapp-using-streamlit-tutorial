@@ -6,6 +6,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from tensorflow.keras.models import load_model
 import pickle
+import requests
 
 
 
@@ -15,11 +16,33 @@ model = load_model("lstm_model.keras")
 with open("scale_min_max.sav", "rb") as file:
     scale = pickle.load(file)
 
+
+
 def stock_prediction ():
 
     selected_date = st.date_input("Select a date:")
     start_date = selected_date - timedelta(days=90)
     end_date = selected_date + timedelta(days=1)       
+
+    url = "https://query1.finance.yahoo.com/v8/finance/chart/BABA"
+
+    params = {
+        "period1": int(start_date.strftime("%s")),
+        "period2": int(end_date.strftime("%s")),
+        "interval": "1d"
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+
+        st.write("Direct Yahoo status:", response.status_code)
+        st.write("Direct Yahoo response:")
+        st.write(response.text[:500])
+
+    except Exception as e:
+        st.error(f"Direct Yahoo request failed: {e}")
+
+
 
     data = yf.download(
     "BABA",
