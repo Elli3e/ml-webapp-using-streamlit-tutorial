@@ -1,87 +1,37 @@
-from pickle import load
+from pickle import load 
 import streamlit as st
 import numpy as np
-import tensorflow as tf
-import yfinance as yf
-from datetime import datetime, timedelta
-from tensorflow.keras.models import load_model
-import pickle
-import requests
 
 
+st.title("YouTube Spam Detector")
+st.write("Enter a YouTube comment below to check whether it is spam.")
 
-st.title("Stock Prediction App")
+model = load(open("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-flask-tutorial/support_vector_youtube_spam.sav","rb"))
+vectorizer = load(open("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-flask-tutorial/vectorize_youtubr_spam.sav","rb" ))
 
-model = load_model("lstm_model.keras")
-with open("scale_min_max.sav", "rb") as file:
-    scale = pickle.load(file)
-
-
-
-def stock_prediction ():
-
-    selected_date = st.date_input("Select a date:")
-    start_date = selected_date - timedelta(days=90)
-    end_date = selected_date + timedelta(days=1)       
-
-    url = "https://query1.finance.yahoo.com/v8/finance/chart/BABA"
-
-    params = {
-        "period1": int(start_date.strftime("%s")),
-        "period2": int(end_date.strftime("%s")),
-        "interval": "1d"
-    }
-
-    try:
-        response = requests.get(url, params=params, timeout=10)
-
-        st.write("Direct Yahoo status:", response.status_code)
-        st.write("Direct Yahoo response:")
-        st.write(response.text[:500])
-
-    except Exception as e:
-        st.error(f"Direct Yahoo request failed: {e}")
+class_dict= {"0":"not_spam","1":"spam"}           
 
 
+def predict_spam(comment):
 
-    data = yf.download(
-    "BABA",
-    start=start_date,
-    end=end_date,
-    auto_adjust=True,
-    progress=False
+       comment_tfidf = vectorizer.transform([comment])
+       pred_class= model.predict(comment_tfidf)
+       pred_class = int(pred_class[0])
+       return class_dict[str(pred_class)]
+
+
+# User input comment
+comment = st.text_area("Enter a YouTube comment:",
+                        placeholder="Example: Check out my channel and subscribe!"
 )
-   
-    st.write("Downloaded data:")
-    st.write(data)
 
-    if data.empty:
-        st.error("Yahoo Finance returned no data for this date range.")
-        return None
-        
-    close = data[["Close"]]
-    st.write("Close data:")
-    st.write(close)
-
-    if len(close) < 60:
-        st.error(
-            f"Only {len(close)} trading days were downloaded. "
-            "At least 60 are required."
-        )
-        return None
-
-    scaled_data = scale.transform(close)
-    scaled_data_LSTM_input =scaled_data[-60: ] 
-    scaled_data_LSTM_input=np.array(scaled_data_LSTM_input)
-    reshaped_LSTM = scaled_data_LSTM_input.reshape(1, 60, 1)
-
-    prediction = model.predict(reshaped_LSTM, verbose=0)
-    prediction_original = scale.inverse_transform(prediction)
-
-    return prediction_original
-
-prediction = stock_prediction()
-if prediction is not None:
-    predicted_price = float(prediction[0][0])
-
-    st.success(f"Predicted price for the next closing day: ${predicted_price:.2f}")
+# Predict button
+if st.button("Predict"): 
+    if comment.strip() == "": 
+          st.warning("Please enter a YouTube comment first.")
+    else: 
+        prediction = predict_spam(comment)
+        if prediction == "Spam": 
+         st.error(f"Prediction: {prediction} 🚨")
+        else:
+         st.success(f"Prediction: {prediction} ✅")
