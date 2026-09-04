@@ -6,8 +6,8 @@ import numpy as np
 st.title("YouTube Spam Detector")
 st.write("Enter a YouTube comment below to check whether it is spam.")
 
-model = load(open("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-flask-tutorial/support_vector_youtube_spam.sav","rb"))
-vectorizer = load(open("C:/Users/e_bab/Documents/4geeks/python-hello/ml-webapp-using-flask-tutorial/vectorize_youtubr_spam.sav","rb" ))
+model = load(open("support_vector_youtube_spam.sav","rb"))
+vectorizer = load(open("vectorize_youtubr_spam.sav","rb" ))
 
 class_dict= {"0":"not_spam","1":"spam"}           
 
@@ -31,6 +31,7 @@ if st.button("Predict"):
           st.warning("Please enter a YouTube comment first.")
     else: 
         prediction = predict_spam(comment)
+        
         if prediction == "Spam": 
          st.error(f"Prediction: {prediction} 🚨")
         else:
